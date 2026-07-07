@@ -5,7 +5,7 @@ A lightweight Chrome Extension Manifest V3 extension that hides X/Twitter posts 
 ## What It Does
 
 - Runs on `https://x.com/*` and `https://twitter.com/*`.
-- Detects visible paid partnership labels in English and common localized equivalents.
+- Detects X/Twitter paid partnership labels in English and common localized equivalents.
 - Hides the matching post from the timeline.
 - Also hides adjacent posts in the same visually connected thread preview when X renders the paid partnership as a multi-post thread.
 - Includes a minimal toolbar popup with an on/off switch.
@@ -47,7 +47,7 @@ x-paid-partnership-hider/
 
 The content script scans X/Twitter post containers, preferring `article` elements because posts are usually rendered that way.
 
-If a post's visible text contains `Paid partnership` or a supported localized equivalent, the extension marks the post and hides it with CSS. For thread previews, it also hides adjacent same-author cells only when they appear visually connected by X's thread connector.
+If a compact label outside the user-written post text contains `Paid partnership` or a supported localized equivalent, the extension marks the post and hides it with CSS. For thread previews, it also hides adjacent same-author cells only when they appear visually connected by X's thread connector.
 
 X/Twitter is a dynamic single-page app, so the extension uses a debounced `MutationObserver` to scan newly added posts while you scroll.
 
@@ -66,7 +66,7 @@ X/Twitter is a dynamic single-page app, so the extension uses a debounced `Mutat
 2. Open X/Twitter.
 3. Browse the timeline.
 4. Confirm regular posts remain visible.
-5. Confirm posts labeled `Paid partnership` are hidden.
+5. Confirm posts labeled `Paid partnership` by X/Twitter are hidden.
 6. Scroll to load new posts and confirm newly added matching posts are hidden.
 7. If a paid partnership appears as a thread preview, confirm the connected thread preview is hidden.
 8. Use the toolbar popup switch to pause or resume hiding.
@@ -81,6 +81,7 @@ X/Twitter is a dynamic single-page app, so the extension uses a debounced `Mutat
 ## Known Limitations
 
 - The extension depends on visible text in the rendered page. If X/Twitter changes the label text or hides it from `innerText`, matching may need to be updated.
+- The extension intentionally ignores matching words inside the main user-written post text.
 - The multilingual matcher is a curated best-effort list. X/Twitter can change localized label wording at any time.
 - The extension hides matching post containers visually instead of deleting them from the page.
 - The thread-hiding behavior is conservative and based on X's current visual thread connector layout.

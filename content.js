@@ -14,28 +14,28 @@
   const MAX_LABEL_TEXT_LENGTH = 80;
 
   const PAID_PARTNERSHIP_PATTERNS = [
-    /paid\s+partnership/i,
-    /\u043f\u043b\u0430\u0442\u043d(?:\u043e\u0435|\u0430\u044f)\s+\u043f\u0430\u0440\u0442\u043d[\u0435\u0451]\u0440\u0441\u0442\u0432[\u043e\u0430]/i,
-    /\u043f\u043b\u0430\u0442\u043d\u0435\s+\u043f\u0430\u0440\u0442\u043d\u0435\u0440\u0441\u0442\u0432\u043e/i,
-    /colaboraci[o\u00f3]n\s+pagada/i,
-    /colabora[c\u00e7][a\u00e3]o\s+paga/i,
-    /parceria\s+paga/i,
-    /partenariat\s+(?:r[e\u00e9]mun[e\u00e9]r[e\u00e9]|payant|sponsoris[e\u00e9])/i,
-    /bezahlte\s+partnerschaft/i,
-    /collaborazione\s+a\s+pagamento/i,
-    /partnership\s+a\s+pagamento/i,
-    /betaald\s+partnerschap/i,
-    /p[l\u0142]atne\s+partnerstwo/i,
-    /[u\u00fc]cretli\s+ortakl[i\u0131]k/i,
-    /kemitraan\s+berbayar/i,
-    /\u6709\u6599\s*\u30d1\u30fc\u30c8\u30ca\u30fc\u30b7\u30c3\u30d7/i,
-    /\uc720\ub8cc\s*\ud30c\ud2b8\ub108\uc2ed/i,
-    /\u4ed8\u8d39\s*\u5408\u4f5c/i,
-    /\u4ed8\u8cbb\s*\u5408\u4f5c/i,
-    /\u0634\u0631\u0627\u0643\u0629\s+\u0645\u062f\u0641\u0648\u0639\u0629/i,
-    /\u092a\u0947\u0921\s+\u092a\u093e\u0930\u094d\u091f\u0928\u0930\u0936\u093f\u092a/i,
-    /\u092d\u0941\u0917\u0924\u093e\u0928\s+\u0938\u093e\u091d\u0947\u0926\u093e\u0930\u0940/i,
-    /\u0e1e\u0e32\u0e23\u0e4c\u0e17\u0e40\u0e19\u0e2d\u0e23\u0e4c\u0e0a\u0e34\u0e1b\u0e41\u0e1a\u0e1a\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19/i
+    /^paid\s+partnership$/i,
+    /^\u043f\u043b\u0430\u0442\u043d(?:\u043e\u0435|\u0430\u044f)\s+\u043f\u0430\u0440\u0442\u043d[\u0435\u0451]\u0440\u0441\u0442\u0432[\u043e\u0430]$/i,
+    /^\u043f\u043b\u0430\u0442\u043d\u0435\s+\u043f\u0430\u0440\u0442\u043d\u0435\u0440\u0441\u0442\u0432\u043e$/i,
+    /^colaboraci[o\u00f3]n\s+pagada$/i,
+    /^colabora[c\u00e7][a\u00e3]o\s+paga$/i,
+    /^parceria\s+paga$/i,
+    /^partenariat\s+(?:r[e\u00e9]mun[e\u00e9]r[e\u00e9]|payant|sponsoris[e\u00e9])$/i,
+    /^bezahlte\s+partnerschaft$/i,
+    /^collaborazione\s+a\s+pagamento$/i,
+    /^partnership\s+a\s+pagamento$/i,
+    /^betaald\s+partnerschap$/i,
+    /^p[l\u0142]atne\s+partnerstwo$/i,
+    /^[u\u00fc]cretli\s+ortakl[i\u0131]k$/i,
+    /^kemitraan\s+berbayar$/i,
+    /^\u6709\u6599\s*\u30d1\u30fc\u30c8\u30ca\u30fc\u30b7\u30c3\u30d7$/i,
+    /^\uc720\ub8cc\s*\ud30c\ud2b8\ub108\uc2ed$/i,
+    /^\u4ed8\u8d39\s*\u5408\u4f5c$/i,
+    /^\u4ed8\u8cbb\s*\u5408\u4f5c$/i,
+    /^\u0634\u0631\u0627\u0643\u0629\s+\u0645\u062f\u0641\u0648\u0639\u0629$/i,
+    /^\u092a\u0947\u0921\s+\u092a\u093e\u0930\u094d\u091f\u0928\u0930\u0936\u093f\u092a$/i,
+    /^\u092d\u0941\u0917\u0924\u093e\u0928\s+\u0938\u093e\u091d\u0947\u0926\u093e\u0930\u0940$/i,
+    /^\u0e1e\u0e32\u0e23\u0e4c\u0e17\u0e40\u0e19\u0e2d\u0e23\u0e4c\u0e0a\u0e34\u0e1b\u0e41\u0e1a\u0e1a\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19$/i
   ];
 
   let scanTimer = null;
@@ -145,7 +145,14 @@
           '[data-testid="User-Name"]',
           '[data-testid="UserDescription"]'
         ].join(",")
-      )
+      ) ||
+        element.querySelector?.(
+          [
+            '[data-testid="tweetText"]',
+            '[data-testid="User-Name"]',
+            '[data-testid="UserDescription"]'
+          ].join(",")
+        )
     );
   }
 

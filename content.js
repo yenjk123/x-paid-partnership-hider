@@ -11,10 +11,12 @@
   const ENABLED_STORAGE_KEY = "enabled";
   const SCAN_DELAY_MS = 150;
   const MAX_ADJACENT_THREAD_CELLS = 3;
+  const MAX_LABEL_TEXT_LENGTH = 80;
 
   const PAID_PARTNERSHIP_PATTERNS = [
     /paid\s+partnership/i,
     /\u043f\u043b\u0430\u0442\u043d(?:\u043e\u0435|\u0430\u044f)\s+\u043f\u0430\u0440\u0442\u043d[\u0435\u0451]\u0440\u0441\u0442\u0432[\u043e\u0430]/i,
+    /\u043f\u043b\u0430\u0442\u043d\u0435\s+\u043f\u0430\u0440\u0442\u043d\u0435\u0440\u0441\u0442\u0432\u043e/i,
     /colaboraci[o\u00f3]n\s+pagada/i,
     /colabora[c\u00e7][a\u00e3]o\s+paga/i,
     /parceria\s+paga/i,
@@ -32,6 +34,7 @@
     /\u4ed8\u8cbb\s*\u5408\u4f5c/i,
     /\u0634\u0631\u0627\u0643\u0629\s+\u0645\u062f\u0641\u0648\u0639\u0629/i,
     /\u092a\u0947\u0921\s+\u092a\u093e\u0930\u094d\u091f\u0928\u0930\u0936\u093f\u092a/i,
+    /\u092d\u0941\u0917\u0924\u093e\u0928\s+\u0938\u093e\u091d\u0947\u0926\u093e\u0930\u0940/i,
     /\u0e1e\u0e32\u0e23\u0e4c\u0e17\u0e40\u0e19\u0e2d\u0e23\u0e4c\u0e0a\u0e34\u0e1b\u0e41\u0e1a\u0e1a\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19/i
   ];
 
@@ -47,10 +50,13 @@
   function getCandidatePostContainers(root = document) {
     const candidates = new Set();
 
+    // X/Twitter usually renders posts as article elements. Prefer these first.
     root.querySelectorAll?.("article").forEach((article) => {
       candidates.add(article);
     });
 
+    // Conservative fallbacks for minor DOM shifts. These avoid broad div scans
+    // and only consider elements that look like timeline/post containers.
     root
       .querySelectorAll?.(
         [
@@ -69,7 +75,11 @@
   }
 
   function hideIfPaidPartnershipPost(container) {
-    if (!container || container.nodeType !== Node.ELEMENT_NODE || !isEnabled) {
+    if (!container || container.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
+
+    if (!isEnabled) {
       return;
     }
 
@@ -79,7 +89,7 @@
 
     container.setAttribute(PROCESSED_ATTRIBUTE, "true");
 
-    if (isPaidPartnershipText(container.innerText || "")) {
+    if (hasPaidPartnershipLabel(container)) {
       getHideTargetsForPost(container).forEach(hideTarget);
       debugLog("Hid a paid partnership post or thread.");
     }
@@ -94,6 +104,55 @@
     return PAID_PARTNERSHIP_PATTERNS.some((pattern) => pattern.test(text));
   }
 
+  function hasPaidPartnershipLabel(container) {
+    for (const element of getPossibleLabelElements(container)) {
+      if (isUserWrittenPostText(element)) {
+        continue;
+      }
+
+      const text = normalizeText(element.innerText || element.textContent || "");
+
+      if (
+        text.length > 0 &&
+        text.length <= MAX_LABEL_TEXT_LENGTH &&
+        isPaidPartnershipText(text)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function getPossibleLabelElements(container) {
+    return (
+      container.querySelectorAll?.(
+        [
+          "span",
+          "a",
+          '[role="link"]',
+          '[dir="auto"]'
+        ].join(",")
+      ) || []
+    );
+  }
+
+  function isUserWrittenPostText(element) {
+    return Boolean(
+      element.closest(
+        [
+          '[data-testid="tweetText"]',
+          '[data-testid="User-Name"]',
+          '[data-testid="UserDescription"]'
+        ].join(",")
+      )
+    );
+  }
+
+  function normalizeText(text) {
+    return text.replace(/\s+/g, " ").trim();
+  }
+
   function getHideTargetsForPost(container) {
     const currentCell = container.closest('[data-testid="cellInnerDiv"]');
 
@@ -104,6 +163,8 @@
     const authorKey = getPostAuthorKey(container);
     const targets = new Set([currentCell]);
 
+    // X may render thread previews as adjacent timeline cells. Only include
+    // adjacent cells when X also draws a thread connector near the avatar.
     collectAdjacentThreadCells(currentCell, "previousElementSibling", authorKey, targets);
     collectAdjacentThreadCells(currentCell, "nextElementSibling", authorKey, targets);
 
@@ -137,7 +198,12 @@
     }
 
     const article = cell.querySelector("article");
-    return authorKey !== null && article && getPostAuthorKey(article) === authorKey;
+
+    if (!article) {
+      return false;
+    }
+
+    return authorKey !== null && getPostAuthorKey(article) === authorKey;
   }
 
   function areCellsVisuallyThreadConnected(firstCell, secondCell) {
@@ -188,12 +254,17 @@
     }
 
     const rect = avatar.getBoundingClientRect();
+
     return rect.width > 0 && rect.height > 0 ? rect : null;
   }
 
   function hasVisibleBackground(element) {
     const backgroundColor = window.getComputedStyle(element).backgroundColor;
-    return backgroundColor !== "transparent" && backgroundColor !== "rgba(0, 0, 0, 0)";
+
+    return (
+      backgroundColor !== "transparent" &&
+      backgroundColor !== "rgba(0, 0, 0, 0)"
+    );
   }
 
   function getPostAuthorKey(container) {

@@ -115,7 +115,8 @@
       if (
         text.length > 0 &&
         text.length <= MAX_LABEL_TEXT_LENGTH &&
-        isPaidPartnershipText(text)
+        isPaidPartnershipText(text) &&
+        hasPaidPartnershipLabelIcon(element)
       ) {
         return true;
       }
@@ -158,6 +159,54 @@
 
   function normalizeText(text) {
     return text.replace(/\s+/g, " ").trim();
+  }
+
+  function hasPaidPartnershipLabelIcon(labelElement) {
+    const labelRect = labelElement.getBoundingClientRect();
+
+    if (labelRect.width <= 0 || labelRect.height <= 0) {
+      return false;
+    }
+
+    for (const wrapper of getAncestorChain(labelElement, 4)) {
+      for (const icon of wrapper.querySelectorAll("svg")) {
+        const iconRect = icon.getBoundingClientRect();
+
+        if (isIconImmediatelyBeforeLabel(iconRect, labelRect)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function getAncestorChain(element, maxDepth) {
+    const ancestors = [];
+    let current = element.parentElement;
+
+    while (current && ancestors.length < maxDepth) {
+      ancestors.push(current);
+      current = current.parentElement;
+    }
+
+    return ancestors;
+  }
+
+  function isIconImmediatelyBeforeLabel(iconRect, labelRect) {
+    const iconCenterY = iconRect.top + iconRect.height / 2;
+    const labelCenterY = labelRect.top + labelRect.height / 2;
+    const horizontalGap = labelRect.left - iconRect.right;
+
+    return (
+      iconRect.width >= 8 &&
+      iconRect.width <= 24 &&
+      iconRect.height >= 8 &&
+      iconRect.height <= 24 &&
+      horizontalGap >= 0 &&
+      horizontalGap <= 12 &&
+      Math.abs(iconCenterY - labelCenterY) <= 8
+    );
   }
 
   function getHideTargetsForPost(container) {

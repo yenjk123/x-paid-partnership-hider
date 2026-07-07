@@ -40,7 +40,6 @@ x-paid-partnership-hider/
     icon-32.png
     icon-48.png
     icon-128.png
-    icon-source-transparent.png
   README.md
 ```
 

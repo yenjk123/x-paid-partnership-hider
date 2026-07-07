@@ -47,7 +47,7 @@ x-paid-partnership-hider/
 
 The content script scans X/Twitter post containers, preferring `article` elements because posts are usually rendered that way.
 
-If a compact label outside the user-written post text exactly matches `Paid partnership` or a supported localized equivalent, the extension marks the post and hides it with CSS. For thread previews, it also hides adjacent same-author cells only when they appear visually connected by X's thread connector.
+If a compact label outside the user-written post text exactly matches `Paid partnership` or a supported localized equivalent and appears beside X's small paid-partnership icon, the extension marks the post and hides it with CSS. For thread previews, it also hides adjacent same-author cells only when they appear visually connected by X's thread connector.
 
 X/Twitter is a dynamic single-page app, so the extension uses a debounced `MutationObserver` to scan newly added posts while you scroll.
 
